@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Competitive Test</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: Arial, sans-serif; 
+      background: #1e1e1e; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      height: 100vh; 
+      flex-direction: column; 
+      color: #fff; 
+      position: relative; 
+    }
+    header { 
+      text-align: center; 
+      margin-bottom: 40px; 
+      width: 100%; 
+    }
+    header h1 { 
+      font-size: 3em; 
+      color: #4CAF50; 
+      margin-bottom: 10px; 
+    }
+    header p { 
+      font-size: 1.2em; 
+      color: #bbb; 
+    }
+    .test-container { 
+      width: 100%; 
+      max-width: 900px; 
+      background: #2c2f38; 
+      padding: 40px; 
+      border-radius: 12px; 
+    }
+    .timer { 
+      font-size: 1.5em; 
+      font-weight: bold; 
+      color: #fff; 
+      margin-bottom: 30px; 
+      text-align: center; 
+    }
+    #question-container { 
+      margin-bottom: 30px; 
+    }
+    #question { 
+      font-size: 1.6em; 
+      font-weight: 600; 
+      color: #fff; 
+      margin-bottom: 20px; 
+    }
+    textarea { 
+      width: 100%; 
+      height: 150px; 
+      padding: 15px; 
+      font-size: 1.1em; 
+      border: 1px solid #555; 
+      border-radius: 6px; 
+      margin-top: 10px; 
+      background: #3c3f45; 
+      color: #fff; 
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); 
+    }
+    #options { 
+      margin-top: 15px; 
+      display: flex; 
+      flex-direction: column; 
+    }
+    .option { 
+      padding: 12px; 
+      margin-bottom: 12px; 
+      background: #3c3f45; 
+      border-radius: 6px; 
+      cursor: pointer; 
+      transition: background-color 0.3s ease; 
+    }
+    .option:hover { 
+      background: #4CAF50; 
+    }
+    button { 
+      background: #4CAF50; 
+      color: white; 
+      border: none; 
+      padding: 12px 24px; 
+      font-size: 1.2em; 
+      border-radius: 6px; 
+      cursor: pointer; 
+      transition: background-color 0.3s ease; 
+      margin-top: 15px; 
+    }
+    button:hover { 
+      background: #45a049; 
+    }
+    button:disabled { 
+      background: #aaa; 
+      cursor: not-allowed; 
+    }
+    .modal { 
+      display: none; 
+      position: fixed; 
+      z-index: 1; 
+      left: 0; 
+      top: 0; 
+      width: 100%; 
+      height: 100%; 
+      background: rgba(0, 0, 0, 0.8); 
+      padding-top: 60px; 
+    }
+    .modal-content { 
+      background: #2c2f38; 
+      margin: 5% auto; 
+      padding: 30px; 
+      border-radius: 12px; 
+      width: 80%; 
+      max-width: 900px; 
+    }
+    #closeModal { 
+      font-size: 1.8em; 
+      cursor: pointer; 
+      position: absolute; 
+      top: 10px; 
+      right: 10px; 
+      color: #888; 
+    }
+    #closeModal:hover { 
+      color: #fff; 
+    }
+    #testResultModal canvas { 
+      width: 100%; 
+      height: 400px; 
+      margin-top: 20px; 
+      border-radius: 10px; 
+    }
+    #skip-question { 
+      background: #FF6347; 
+      margin-left: 20px; 
+      padding: 12px 24px; 
+      font-size: 1.2em; 
+    }
+    #skip-question:hover { 
+      background: #ff5030; 
+    }
+    .correct-answer { color: #4CAF50; font-weight: bold; }
+    .user-answer { color: #FF6347; }
+    .answer-section { margin-top: 15px; }
+    /* Watermark near the submit button */
+    .watermark {
+      position: absolute;
+      right: 30px;
+      top: 85%;
+      font-size: 1.2em;
+      color: rgba(255, 255, 255, 0.5);
+      font-weight: bold;
+      cursor: pointer;
+      pointer-events: all;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Competitive Python Test</h1>
+    <p>Test your Python skills under exam conditions!</p>
+  </header>
+  <div class="test-container">
+    <div id="timer" class="timer">Time Left: <span id="time">05:00</span></div>
+    <div id="question-container">
+      <div id="question"></div>
+      <textarea id="answer" placeholder="Write code here"></textarea>
+      <div id="options" class="options"></div>
+    </div>
+    <button id="next-question">Next</button>
+    <button id="skip-question">Skip</button>
+    <button id="submit-test" style="display:none;">Submit</button>
+    <div class="watermark" id="watermark">insta-coder.harshitsingh</div>
+  </div>
+
+  <div id="testResultModal" class="modal">
+    <div class="modal-content">
+      <span id="closeModal">&times;</span>
+      <h2>Your Results</h2>
+      <div id="testResultsBody">
+        <p id="result-summary"></p>
+        <div id="correct-answers-list"></div>
+        <canvas id="pieChart"></canvas>
+        <canvas id="timeChart"></canvas>
+      </div>
+      <button id="closeTestResults">&times; Close</button>
+    </div>
+  </div>
+
+  <script>
+    let timeLeft = 300; // 5 minutes in seconds
+    let timerInterval;
+    const questions = [
+      { q: "What is the difference between deep copy and shallow copy?", a: "Shallow copies references, while deep copy copies the entire object structure.", t: "multiple-choice", o: ["Shallow copies references", "Deep copies objects", "Both", "None"] },
+      { q: "Write a function to find the factorial of a number using recursion.", a: "def factorial(n): if n == 0: return 1; return n * factorial(n-1)", t: "code" },
+      { q: "Explain the concept of decorators in Python.", a: "Decorators are functions that modify the behavior of another function.", t: "multiple-choice", o: ["Modifies function behavior", "Used for inheritance", "Lambda functions", "Error handling"] },
+      { q: "Write a Python function to check if a string is a palindrome.", a: "def is_palindrome(s): return s == s[::-1]", t: "code" },
+      { q: "What is a lambda function in Python?", a: "Lambda functions are anonymous, small functions defined using the keyword 'lambda'.", t: "multiple-choice", o: ["Anonymous function", "Named function", "Built-in function", "Recursive function"] },
+      { q: "Write a function to merge two sorted lists into a sorted list.", a: "def merge_sorted_lists(a, b): return sorted(a + b)", t: "code" },
+      { q: "How would you handle exceptions in Python?", a: "Using try-except blocks.", t: "multiple-choice", o: ["try-except blocks", "try-catch blocks", "if-else statements", "throw-catch mechanism"] },
+      { q: "Explain the difference between a class method and a static method.", a: "Class methods operate on class-level data, static methods don't operate on instance or class data.", t: "multiple-choice", o: ["Class methods operate on instance", "Static methods operate on class", "Class methods operate on class", "Static methods use instance data"] },
+      { q: "What does the 'with' statement do in Python?", a: "The 'with' statement simplifies resource management like file handling.", t: "multiple-choice", o: ["Simplifies resource handling", "Creates a new scope", "Executes code in parallel", "None of the above"] }
+    ];
+
+    let currentQuestionIndex = 0, correctAnswers = 0, answersGiven = 0;
+    const questionElement = document.getElementById('question'), optionsElement = document.getElementById('options'), answerElement = document.getElementById('answer'),
+          nextButton = document.getElementById('next-question'), skipButton = document.getElementById('skip-question'), submitButton = document.getElementById('submit-test'),
+          timeElement = document.getElementById('time'), testResultModal = document.getElementById('testResultModal'), closeModalButton = document.getElementById('closeModal'),
+          closeTestResultsButton = document.getElementById('closeTestResults'), pieChartCanvas = document.getElementById('pieChart'),
+          timeChartCanvas = document.getElementById('timeChart'), resultSummary = document.getElementById('result-summary'), correctAnswersList = document.getElementById('correct-answers-list');
+
+    function startTest() {
+      loadQuestion();
+      startTimer();
+    }
+
+    function loadQuestion() {
+      const question = questions[currentQuestionIndex];
+      questionElement.textContent = question.q;
+      if (question.t === 'multiple-choice') {
+        optionsElement.innerHTML = question.o.map(o => `<div class="option">${o}</div>`).join('');
+        optionsElement.style.display = 'block'; answerElement.style.display = 'none';
+        Array.from(optionsElement.children).forEach((opt, i) => opt.onclick = () => selectOption(i));
+      } else {
+        answerElement.style.display = 'block'; optionsElement.style.display = 'none'; answerElement.value = '';
+      }
+    }
+
+    function selectOption(index) {
+      const selectedAnswer = questions[currentQuestionIndex].o[index];
+      if (selectedAnswer === questions[currentQuestionIndex].a) {
+        correctAnswers++;
+      }
+      answersGiven++;
+    }
+
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timeElement.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          showTestResults();
+        }
+      }, 1000);
+    }
+
+    function showTestResults() {
+      clearInterval(timerInterval);
+      resultSummary.textContent = `Correct Answers: ${correctAnswers} / ${questions.length}`;
+      testResultModal.style.display = 'block';
+    }
+
+    nextButton.onclick = () => {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < questions.length) {
+        loadQuestion();
+      } else {
+        showTestResults();
+      }
+    };
+    
+    skipButton.onclick = () => {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < questions.length) {
+        loadQuestion();
+      } else {
+        showTestResults();
+      }
+    };
+
+    closeModalButton.onclick = () => testResultModal.style.display = 'none';
+    closeTestResultsButton.onclick = () => testResultModal.style.display = 'none';
+
+    document.getElementById('watermark').onclick = function() {
+      window.open('https://www.instagram.com/coder.harshitsingh?igsh=bWp0ODFycXZydHFy', '_blank');
+    };
+
+    startTest();
+  </script>
+</body>
+</html>
